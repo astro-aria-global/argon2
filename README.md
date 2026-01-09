@@ -1,28 +1,14 @@
-Prerequisites:
+# Argon2
 
-- [Vercel CLI](https://vercel.com/docs/cli) installed globally
+Verification helper for astro framework blog theme aria.
 
-To develop locally:
+## TODO List / Pipeline
 
-```
-npm install
-vc dev
-```
-
-```
-open http://localhost:3000
-```
-
-To build locally:
-
-```
-npm install
-vc build
-```
-
-To deploy:
-
-```
-npm install
-vc deploy
-```
+- [ ] Vercel Firewall: filter requests with validate `X-Aria-Interaction-Auth` header
+  - [ ] Edit desired `X-Aria-Interaction-Auth` value
+- [ ] `POST` Only Function: src/index.ts
+  - [ ] Validate HMAC signature
+  - [ ] Load values from request body
+  - [ ] Run `argon2.verify()`
+  - [ ] Construct response json `{success, errcode}`
+  - [ ] Sign response with HMAC and return
