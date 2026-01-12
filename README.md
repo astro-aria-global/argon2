@@ -6,7 +6,7 @@ Verification helper for astro framework blog theme aria.
 
 - [ ] Vercel Firewall: filter requests with validate `X-Aria-Interaction-Auth` header
   - [ ] Edit desired `X-Aria-Interaction-Auth` value
-- [ ] `POST` Only Function: src/index.ts
+- [ ] `POST` Only Function: `src/index.ts`
   - [ ] Validate HMAC signature
   - [ ] Load values from request body
   - [ ] Run `argon2.verify()`
