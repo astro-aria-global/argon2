@@ -11,6 +11,7 @@ type Variables = {
     hashedValue?: string;
   };
 };
+type RequestBody = Variables["requestBody"];
 
 const app = new Hono<{ Variables: Variables }>();
 
@@ -81,7 +82,7 @@ app.use("/", async (c, next) => {
 
 app.post("/", async (c) => {
   // Step 2: Fetch parsed request body
-  const body = c.get("requestBody") as unknown;
+  const body = c.get("requestBody") as RequestBody | undefined;
 
   // Step 3: Verify params existence
   if (
