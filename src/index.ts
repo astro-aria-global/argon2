@@ -15,8 +15,15 @@ type Variables = {
 const app = new Hono<{ Variables: Variables }>();
 
 // Step 1: Import environment variables
-const HMAC_CF_TO_VERCEL = process.env.HMAC_CF_TO_VERCEL || "";
-const HMAC_VERCEL_TO_CF = process.env.HMAC_VERCEL_TO_CF || "";
+const rawHmacCfToVercel = process.env.HMAC_CF_TO_VERCEL;
+const rawHmacVercelToCf = process.env.HMAC_VERCEL_TO_CF;
+
+if (!rawHmacCfToVercel || !rawHmacVercelToCf) {
+  throw new Error("Missing environment variables");
+}
+
+const HMAC_CF_TO_VERCEL: string = rawHmacCfToVercel;
+const HMAC_VERCEL_TO_CF: string = rawHmacVercelToCf;
 
 // Helper function for HMAC calculation
 const hmacCalc = (content: string, key: string): string => {
@@ -49,10 +56,10 @@ app.use("*", async (c, next) => {
   try {
     const parsedBody = JSON.parse(rawBody);
     c.set("requestBody", parsedBody);
-  } catch (e) {
+  } catch (error) {
     console.error(
       "Parsing request body failed:",
-      e instanceof Error ? e.name : "UnknownError",
+      error instanceof Error ? error.name : "UnknownError",
     );
     return c.json({ success: false, errcode: "INVALID_BODY" }, 400);
   }
@@ -93,10 +100,10 @@ app.post("/", async (c) => {
     } else {
       return c.json({ success: false, errcode: "PASSWORD_MISMATCH" });
     }
-  } catch (e) {
+  } catch (error) {
     console.error(
       "Argon2 process failed:",
-      e instanceof Error ? e.name : "UnknownError",
+      error instanceof Error ? error.name : "UnknownError",
     );
     return c.json({ success: false, errcode: "VERIFICATION_ERROR" }, 500);
   }
