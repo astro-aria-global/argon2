@@ -12,6 +12,11 @@ type Variables = {
   };
 };
 
+interface AuthBody {
+  inputPassword: string;
+  hashedValue: string;
+}
+
 const app = new Hono<{ Variables: Variables }>();
 
 // Step 1: Import environment variables
@@ -22,16 +27,13 @@ if (!rawHmacCfToVercel || !rawHmacVercelToCf) {
   throw new Error("Missing environment variables");
 }
 
-const HMAC_CF_TO_VERCEL: string = rawHmacCfToVercel;
-const HMAC_VERCEL_TO_CF: string = rawHmacVercelToCf;
-
 // Helper function for HMAC calculation
 const hmacCalc = (content: string, key: string): string => {
   return crypto.createHmac("sha256", key).update(content).digest("hex");
 };
 
 // Middleware for request validation
-app.use("*", async (c, next) => {
+app.use("/", async (c, next) => {
   // 1. Check signature header
   const requestSignature = c.req.header("X-Aria-Request-Sig");
   if (!requestSignature) {
@@ -42,7 +44,7 @@ app.use("*", async (c, next) => {
   const rawBody = await c.req.text();
 
   // 3. Verify signature status
-  const expectedSignature = hmacCalc(rawBody, HMAC_CF_TO_VERCEL);
+  const expectedSignature = hmacCalc(rawBody, rawHmacCfToVercel);
   const source = Buffer.from(requestSignature);
   const target = Buffer.from(expectedSignature);
   if (
@@ -68,7 +70,7 @@ app.use("*", async (c, next) => {
 });
 
 // Middleware for response signing
-app.use("*", async (c, next) => {
+app.use("/", async (c, next) => {
   await next();
 
   // 1. Fetch response body
@@ -76,7 +78,7 @@ app.use("*", async (c, next) => {
   const responseBody = await responseClone.text();
 
   // 2. Sign the response body
-  const responseSignature = hmacCalc(responseBody, HMAC_VERCEL_TO_CF);
+  const responseSignature = hmacCalc(responseBody, rawHmacVercelToCf);
 
   // 3. Set response header
   c.res.headers.set("X-Aria-Response-Sig", responseSignature);
@@ -84,13 +86,21 @@ app.use("*", async (c, next) => {
 
 app.post("/", async (c) => {
   // Step 2: Fetch parsed request body
-  const body = c.get("requestBody");
-  const { inputPassword, hashedValue } = body;
+  const body = (await c.req.json()) as Record<string, unknown>;
 
   // Step 3: Verify params existence
-  if (!inputPassword || !hashedValue) {
+  if (
+    !body ||
+    typeof body !== "object" ||
+    !("inputPassword" in body) ||
+    !("hashedValue" in body) ||
+    typeof body.inputPassword !== "string" ||
+    typeof body.hashedValue !== "string"
+  ) {
     return c.json({ success: false, errcode: "MISSING_PARAMS" }, 400);
   }
+
+  const { inputPassword, hashedValue } = body as unknown as AuthBody;
 
   // Step 4: Run argon2.verify()
   try {
