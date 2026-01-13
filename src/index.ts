@@ -50,7 +50,10 @@ app.use("*", async (c, next) => {
     const parsedBody = JSON.parse(rawBody);
     c.set("requestBody", parsedBody);
   } catch (e) {
-    console.error("Parsing request body failed: ", e);
+    console.error(
+      "Parsing request body failed:",
+      e instanceof Error ? e.name : "UnknownError",
+    );
     return c.json({ success: false, errcode: "INVALID_BODY" }, 400);
   }
 
@@ -77,7 +80,7 @@ app.post("/", async (c) => {
   const body = c.get("requestBody");
   const { inputPassword, hashedValue } = body;
 
-  // Step 3: Verify params existance
+  // Step 3: Verify params existence
   if (!inputPassword || !hashedValue) {
     return c.json({ success: false, errcode: "MISSING_PARAMS" }, 400);
   }
@@ -90,8 +93,11 @@ app.post("/", async (c) => {
     } else {
       return c.json({ success: false, errcode: "PASSWORD_MISMATCH" });
     }
-  } catch (error) {
-    console.error("Argon2 process failed: ", error);
+  } catch (e) {
+    console.error(
+      "Argon2 process failed:",
+      e instanceof Error ? e.name : "UnknownError",
+    );
     return c.json({ success: false, errcode: "VERIFICATION_ERROR" }, 500);
   }
 });
