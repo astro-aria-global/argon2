@@ -12,11 +12,6 @@ type Variables = {
   };
 };
 
-interface AuthBody {
-  inputPassword: string;
-  hashedValue: string;
-}
-
 const app = new Hono<{ Variables: Variables }>();
 
 // Step 1: Import environment variables
@@ -86,7 +81,7 @@ app.use("/", async (c, next) => {
 
 app.post("/", async (c) => {
   // Step 2: Fetch parsed request body
-  const body = (await c.req.json()) as Record<string, unknown>;
+  const body = c.get("requestBody") as unknown;
 
   // Step 3: Verify params existence
   if (
@@ -100,7 +95,7 @@ app.post("/", async (c) => {
     return c.json({ success: false, errcode: "MISSING_PARAMS" }, 400);
   }
 
-  const { inputPassword, hashedValue } = body as unknown as AuthBody;
+  const { inputPassword, hashedValue } = body;
 
   // Step 4: Run argon2.verify()
   try {
