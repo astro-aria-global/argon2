@@ -28,6 +28,10 @@ const hmacCalc = (content: string, key: string): string => {
   return crypto.createHmac("sha256", key).update(content).digest("hex");
 };
 
+// Helper function to sleep for given time
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 // Middleware for request validation
 app.use("/", async (c, next) => {
   // 1. Check signature header
@@ -81,10 +85,13 @@ app.use("/", async (c, next) => {
 });
 
 app.post("/", async (c) => {
-  // Step 2: Fetch parsed request body
+  // Step 2: Mark start time for time padding
+  const startTime = Date.now();
+
+  // Step 3: Fetch parsed request body
   const body = c.get("requestBody") as RequestBody | undefined;
 
-  // Step 3: Verify params existence
+  // Step 4: Verify params existence
   if (
     !body ||
     typeof body !== "object" ||
@@ -98,9 +105,17 @@ app.post("/", async (c) => {
 
   const { inputPassword, hashedValue } = body;
 
-  // Step 4: Run argon2.verify()
+  // Step 5: Run argon2.verify()
   try {
     const isVerified = await argon2.verify(hashedValue, inputPassword);
+
+    // Make sure function runs more than limit
+    const minExecutionTime = 250;
+    const elapsedTime = Date.now() - startTime;
+    if (elapsedTime < minExecutionTime) {
+      await sleep(minExecutionTime - elapsedTime);
+    }
+
     if (isVerified) {
       return c.json({ success: true });
     } else {
