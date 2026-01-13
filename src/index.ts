@@ -36,6 +36,7 @@ const sleep = (ms: number) =>
 app.use("/", async (c, next) => {
   // 1. Check signature header
   const requestSignature = c.req.header("X-Aria-Request-Sig");
+
   if (!requestSignature) {
     return c.json({ success: false, errcode: "MISSING_SIGNATURE" }, 401);
   }
@@ -47,6 +48,7 @@ app.use("/", async (c, next) => {
   const expectedSignature = hmacCalc(rawBody, rawHmacCfToVercel);
   const source = Buffer.from(requestSignature);
   const target = Buffer.from(expectedSignature);
+
   if (
     source.length !== target.length ||
     !crypto.timingSafeEqual(source, target)
@@ -112,6 +114,7 @@ app.post("/", async (c) => {
     // Make sure function runs more than limit
     const minExecutionTime = 250;
     const elapsedTime = Date.now() - startTime;
+
     if (elapsedTime < minExecutionTime) {
       await sleep(minExecutionTime - elapsedTime);
     }
