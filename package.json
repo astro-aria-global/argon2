@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "argon2": "^0.44.0",
-    "hono": "^4.11.4"
+    "hono": "^4.11.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
